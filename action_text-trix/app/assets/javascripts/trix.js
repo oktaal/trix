@@ -598,7 +598,10 @@ Copyright © 2025 37signals, LLC
   var parser = {
     removeBlankTableCells: false,
     tableCellSeparator: " | ",
-    tableRowSeparator: "\n"
+    tableRowSeparator: "\n",
+    allowedAttributes: "style href src width height language class".split(" "),
+    forbiddenProtocols: "javascript:".split(" "),
+    forbiddenElements: "script iframe form noscript".split(" ")
   };
 
   var text_attributes = {
@@ -3090,9 +3093,6 @@ $\
       data.forceKeepAttr = true;
     }
   });
-  const DEFAULT_ALLOWED_ATTRIBUTES = "style href src width height language class".split(" ");
-  const DEFAULT_FORBIDDEN_PROTOCOLS = "javascript:".split(" ");
-  const DEFAULT_FORBIDDEN_ELEMENTS = "script iframe form noscript".split(" ");
   class HTMLSanitizer extends BasicObject {
     static setHTML(element, html, options) {
       const sanitizedElement = new this(html, options).sanitize();
@@ -3112,9 +3112,9 @@ $\
         purifyOptions
       } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       super(...arguments);
-      this.allowedAttributes = allowedAttributes || DEFAULT_ALLOWED_ATTRIBUTES;
-      this.forbiddenProtocols = forbiddenProtocols || DEFAULT_FORBIDDEN_PROTOCOLS;
-      this.forbiddenElements = forbiddenElements || DEFAULT_FORBIDDEN_ELEMENTS;
+      this.allowedAttributes = allowedAttributes || parser.allowedAttributes;
+      this.forbiddenProtocols = forbiddenProtocols || parser.forbiddenProtocols;
+      this.forbiddenElements = forbiddenElements || parser.forbiddenElements;
       this.purifyOptions = purifyOptions || {};
       this.body = createBodyElementForHTML(html);
     }

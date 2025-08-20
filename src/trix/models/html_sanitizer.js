@@ -3,7 +3,6 @@ import BasicObject from "trix/core/basic_object"
 
 import { nodeIsAttachmentElement, removeNode, tagName, walkTree } from "trix/core/helpers"
 import DOMPurify from "dompurify"
-import * as config from "trix/config"
 
 DOMPurify.addHook("uponSanitizeAttribute", function (node, data) {
   const allowedAttributePattern = /^data-trix-/
