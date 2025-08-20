@@ -2,25 +2,45 @@ import * as config from "trix/config"
 import BasicObject from "trix/core/basic_object"
 
 import { nodeIsAttachmentElement, removeNode, tagName, walkTree } from "trix/core/helpers"
+import DOMPurify from "dompurify"
+import * as config from "trix/config"
+
+DOMPurify.addHook("uponSanitizeAttribute", function (node, data) {
+  const allowedAttributePattern = /^data-trix-/
+  if (allowedAttributePattern.test(data.attrName)) {
+    data.forceKeepAttr = true
+  }
+})
 
 export default class HTMLSanitizer extends BasicObject {
-  static setHTML(element, html) {
-    const sanitizedElement = new this(html).sanitize()
+  static setHTML(element, html, options) {
+    const sanitizedElement = new this(html, options).sanitize()
     const sanitizedHtml = sanitizedElement.getHTML ? sanitizedElement.getHTML() : sanitizedElement.outerHTML
     element.innerHTML = sanitizedHtml
   }
 
-  constructor(html) {
+  static sanitize(html, options) {
+    const sanitizer = new this(html, options)
+    sanitizer.sanitize()
+    return sanitizer
+  }
+  constructor(html, { allowedAttributes, forbiddenProtocols, forbiddenElements, purifyOptions } = {}) {
     super(...arguments)
-    this.allowedAttributes = config.parser.allowedAttributes
-    this.forbiddenProtocols = config.parser.forbiddenProtocols
-    this.forbiddenElements = config.parser.forbiddenElements
+    this.allowedAttributes = allowedAttributes || config.parser.allowedAttributes
+    this.forbiddenProtocols = forbiddenProtocols || config.parser.forbiddenProtocols
+    this.forbiddenElements = forbiddenElements || config.parser.forbiddenElements
+    this.purifyOptions = purifyOptions || {}
     this.body = createBodyElementForHTML(html)
   }
 
   sanitize() {
     this.sanitizeElements()
-    return this.normalizeListElementNesting()
+    this.normalizeListElementNesting()
+    const purifyConfig = Object.assign({}, config.dompurify, this.purifyOptions)
+    DOMPurify.setConfig(purifyConfig)
+    this.body = DOMPurify.sanitize(this.body)
+
+    return this.body
   }
 
   getHTML() {
